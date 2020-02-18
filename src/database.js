@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
-const mongodbUrl =
-  process.env.MONGODB_URL ||
-  "mongodb+srv://joao:joao@cluster0-bmo63.azure.mongodb.net/test?retryWrites=true&w=majority";
+import config from "config";
+
+const mongodbUrl = config.get("database.mongoUrl");
 
 const connect = () =>
   mongoose.connect(mongodbUrl, {

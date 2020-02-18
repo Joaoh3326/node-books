@@ -1,0 +1,5 @@
+{
+  "database": {
+    "mongoUrl": "mongodb+srv://joao:joao@cluster0-bmo63.azure.mongodb.net/test?retryWrites=true&w=majority"
+  }
+}
