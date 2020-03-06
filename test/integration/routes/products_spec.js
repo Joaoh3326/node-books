@@ -1,16 +1,7 @@
 import Product from "../../../src/models/product";
+import AuthService from '../../../src/services/auth';
 
 describe("Routes: Products", () => {
-  let request;
-  let app;
-
-  before(async () => {
-    app = await setupApp();
-    request = supertest(app);
-  });
-
-  after(async () => await app.database.close(() => ({})));
-
   const defaultId = "56cb91bdc3464f14678934ca";
   const defaultProduct = {
     name: "Default product",
@@ -26,6 +17,15 @@ describe("Routes: Products", () => {
     price: 100
   };
 
+  const expectedAdminUser = {
+    _id: defaultId,
+    name: 'Jhon Doe',
+    email: 'jhon@mail.com',
+    role: 'admin'
+  };
+
+  const authToken = AuthService.generateToken(expectedAdminUser);
+
   beforeEach(async () => {
     await Product.deleteMany();
 
@@ -38,19 +38,26 @@ describe("Routes: Products", () => {
 
   describe("GET /products", () => {
     it("should return a list of products", done => {
-      request.get("/products").end((err, res) => {
-        expect(res.body).to.eql([expectedProduct]);
-        done(err);
-      });
+      request
+        .get("/products")
+        .set({ 'x-access-token': authToken })
+        .end((err, res) => {
+          console.log(res.body)
+          expect(res.body).to.eql([expectedProduct]);
+          done(err);
+        });
     });
 
     context("when an id is specified", done => {
       it("should return 200 with one product", done => {
-        request.get(`/products/${defaultId}`).end((err, res) => {
-          expect(res.statusCode).to.eql(200);
-          expect(res.body).to.eql([expectedProduct]);
-          done(err);
-        });
+        request
+          .get(`/products/${defaultId}`)
+          .set({ 'x-access-token': authToken })
+          .end((err, res) => {
+            expect(res.statusCode).to.eql(200);
+            expect(res.body).to.eql([expectedProduct]);
+            done(err);
+          });
       });
     });
   });
@@ -75,6 +82,7 @@ describe("Routes: Products", () => {
 
         request
           .post("/products")
+          .set({ 'x-access-token': authToken })
           .send(newProduct)
           .end((err, res) => {
             expect(res.statusCode).to.eql(201);
@@ -95,6 +103,7 @@ describe("Routes: Products", () => {
 
         request
           .put(`/products/${defaultId}`)
+          .set({ 'x-access-token': authToken })
           .send(updatedProduct)
           .end((err, res) => {
             expect(res.status).to.eql(200);
@@ -107,10 +116,13 @@ describe("Routes: Products", () => {
   describe("DELETE /products/:id", () => {
     context("when deleting a product", () => {
       it("should delete a product and return 204 as status code", done => {
-        request.delete(`/products/${defaultId}`).end((err, res) => {
-          expect(res.status).to.eql(204);
-          done(err);
-        });
+        request
+          .delete(`/products/${defaultId}`)
+          .set({ 'x-access-token': authToken })
+          .end((err, res) => {
+            expect(res.status).to.eql(204);
+            done(err);
+          });
       });
     });
   });
